@@ -53,6 +53,9 @@ func (a *App) InstallPlugin(pluginFile io.ReadSeeker, replace bool) (*model.Mani
 }
 
 func (a *App) installPlugin(pluginFile io.ReadSeeker, replace bool) (*model.Manifest, *model.AppError) {
+	// Stash the previous state of the plugin, if available
+	stashedStates := a.Config().PluginSettings.PluginStates
+
 	manifest, appErr := a.installPluginLocally(pluginFile, replace)
 	if appErr != nil {
 		return nil, appErr
@@ -71,6 +74,11 @@ func (a *App) installPlugin(pluginFile io.ReadSeeker, replace bool) (*model.Mani
 			Id: manifest.Id,
 		},
 	)
+
+	// Enable plugin after all cluster peers are updated
+	if stashedStates[manifest.Id] != nil && stashedStates[manifest.Id].Enable {
+		a.EnablePlugin(manifest.Id)
+	}
 
 	return manifest, nil
 }
@@ -110,9 +118,6 @@ func (a *App) installPluginLocally(pluginFile io.ReadSeeker, replace bool) (*mod
 		return nil, model.NewAppError("installPlugin", "app.plugin.invalid_id.app_error", map[string]interface{}{"Min": plugin.MinIdLength, "Max": plugin.MaxIdLength, "Regex": plugin.ValidIdRegex}, "", http.StatusBadRequest)
 	}
 
-	// Stash the previous state of the plugin, if available
-	stashed := a.Config().PluginSettings.PluginStates[manifest.Id]
-
 	bundles, err := pluginsEnvironment.Available()
 	if err != nil {
 		return nil, model.NewAppError("installPlugin", "app.plugin.install.app_error", nil, err.Error(), http.StatusInternalServerError)
@@ -144,8 +149,12 @@ func (a *App) installPluginLocally(pluginFile io.ReadSeeker, replace bool) (*mod
 	}
 	f.Close()
 
-	if stashed != nil && stashed.Enable {
-		a.EnablePlugin(manifest.Id)
+	if manifest.HasWebapp() {
+		updatedManifest, err := pluginsEnvironment.GenerateWebappBundle(manifest.Id)
+		if err != nil {
+			return nil, model.NewAppError("uploadPlugin", "app.plugin.flag_managed.app_error", nil, err.Error(), http.StatusInternalServerError)
+		}
+		manifest.Webapp.BundleHash = updatedManifest.Webapp.BundleHash
 	}
 
 	if err := a.notifyPluginStatusesChanged(); err != nil {
@@ -160,6 +169,11 @@ func (a *App) RemovePlugin(id string) *model.AppError {
 }
 
 func (a *App) removePlugin(id string) *model.AppError {
+	// Disable plugin before removal and notify cluster peers inline.
+	if err := a.DisablePlugin(id); err != nil {
+		return err
+	}
+
 	if err := a.removePluginLocally(id); err != nil {
 		return err
 	}
@@ -212,18 +226,10 @@ func (a *App) removePluginLocally(id string) *model.AppError {
 		return model.NewAppError("removePlugin", "app.plugin.not_installed.app_error", nil, "", http.StatusBadRequest)
 	}
 
-	if pluginsEnvironment.IsActive(id) && manifest.HasClient() {
-		message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_PLUGIN_DISABLED, "", "", "", nil)
-		message.Add("manifest", manifest.ClientManifest())
-		a.Publish(message)
-	}
-
 	pluginsEnvironment.Deactivate(id)
 	pluginsEnvironment.RemovePlugin(id)
-	a.UnregisterPluginCommands(id)
 
-	err = os.RemoveAll(pluginPath)
-	if err != nil {
+	if err := os.RemoveAll(pluginPath); err != nil {
 		return model.NewAppError("removePlugin", "app.plugin.remove.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 
