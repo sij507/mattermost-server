@@ -183,6 +183,16 @@ func (a *App) Publish(message *model.WebSocketEvent) {
 	}
 }
 
+// PublishLocal same as Publish except it only publishes to
+// websockets connected to this peer.
+func (a *App) PublishLocal(message *model.WebSocketEvent) {
+	if metrics := a.Metrics; metrics != nil {
+		metrics.IncrementWebsocketEvent(message.Event)
+	}
+
+	a.PublishSkipClusterSend(message)
+}
+
 func (a *App) PublishSkipClusterSend(message *model.WebSocketEvent) {
 	if message.Broadcast.UserId != "" {
 		hub := a.GetHubForUserId(message.Broadcast.UserId)

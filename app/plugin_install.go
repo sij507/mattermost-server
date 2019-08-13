@@ -80,6 +80,10 @@ func (a *App) installPlugin(pluginFile io.ReadSeeker, replace bool) (*model.Mani
 		a.EnablePlugin(manifest.Id)
 	}
 
+	if err := a.notifyPluginStatusesChanged(); err != nil {
+		mlog.Error("failed to notify plugin status changed", mlog.Err(err))
+	}
+
 	return manifest, nil
 }
 
@@ -155,10 +159,6 @@ func (a *App) installPluginLocally(pluginFile io.ReadSeeker, replace bool) (*mod
 			return nil, model.NewAppError("uploadPlugin", "app.plugin.flag_managed.app_error", nil, err.Error(), http.StatusInternalServerError)
 		}
 		manifest.Webapp.BundleHash = updatedManifest.Webapp.BundleHash
-	}
-
-	if err := a.notifyPluginStatusesChanged(); err != nil {
-		mlog.Error("failed to notify plugin status changed", mlog.Err(err))
 	}
 
 	return manifest, nil
