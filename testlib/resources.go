@@ -130,7 +130,7 @@ func SetupTestResources() (string, error) {
 					return "", errors.Wrapf(err, "failed to copy file %s to %s", testResource.src, resourceDestInTemp)
 				}
 			} else if testResource.resType == resourceTypeFolder {
-				err = utils.CopyDir(testResource.src, resourceDestInTemp)
+				err = utils.CopyDir(testResource.src, resourceDestInTemp, false)
 				if err != nil {
 					return "", errors.Wrapf(err, "failed to copy folder %s to %s", testResource.src, resourceDestInTemp)
 				}
