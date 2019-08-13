@@ -36,7 +36,7 @@ func TestCopyDir(t *testing.T) {
 	err = ioutil.WriteFile(filepath.Join(srcDir, childDir, childTempFile), []byte("test file"), 0755)
 	require.NoError(t, err)
 
-	err = CopyDir(srcDir, dstDir, false)
+	err = CopyDir(srcDir, dstDir)
 	assert.NoError(t, err)
 
 	stat, err := os.Stat(filepath.Join(dstDir, tempFile))
@@ -59,6 +59,6 @@ func TestCopyDir(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "test file", string(data))
 
-	err = CopyDir(srcDir, dstDir, false)
+	err = CopyDir(srcDir, dstDir)
 	assert.Error(t, err)
 }

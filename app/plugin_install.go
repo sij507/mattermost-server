@@ -141,7 +141,7 @@ func (a *App) installPluginLocally(pluginFile io.ReadSeeker, replace bool) (*mod
 	}
 
 	pluginPath := filepath.Join(*a.Config().PluginSettings.Directory, manifest.Id)
-	err = utils.CopyDir(tmpPluginDir, pluginPath, false)
+	err = utils.CopyDir(tmpPluginDir, pluginPath)
 	if err != nil {
 		return nil, model.NewAppError("installPlugin", "app.plugin.mvdir.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
@@ -224,10 +224,6 @@ func (a *App) removePluginLocally(id string) *model.AppError {
 
 	if manifest == nil {
 		return model.NewAppError("removePlugin", "app.plugin.not_installed.app_error", nil, "", http.StatusBadRequest)
-	}
-
-	if err := pluginsEnvironment.CleanUpWebappBundle(manifest.Id); err != nil {
-		return model.NewAppError("removePlugin", "app.plugin.remove_webapp_bundle.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 
 	pluginsEnvironment.Deactivate(id)
