@@ -163,6 +163,8 @@ func (env *Environment) Statuses() (model.PluginStatuses, error) {
 }
 
 func (env *Environment) Activate(id string) (manifest *model.Manifest, activated bool, reterr error) {
+	mlog.Info(fmt.Sprintln("Environment.Activate id ", id))
+
 	// Check if we are already active
 	if env.IsActive(id) {
 		return nil, false, nil
@@ -186,6 +188,8 @@ func (env *Environment) Activate(id string) (manifest *model.Manifest, activated
 	}
 
 	value, ok := env.registeredPlugins.Load(id)
+	mlog.Info(fmt.Sprintln("Environment.Activate env.registeredPlugins.Load ok", ok))
+	mlog.Info(fmt.Sprintln("Environment.Activate env.registeredPlugins.Load id", id))
 	if !ok {
 		value = newRegisteredPlugin(pluginInfo)
 		env.registeredPlugins.Store(id, value)
@@ -197,6 +201,8 @@ func (env *Environment) Activate(id string) (manifest *model.Manifest, activated
 	rp.BundleInfo = pluginInfo
 
 	defer func() {
+		mlog.Info(fmt.Sprintln("Environment.Activate reterr", reterr))
+
 		if reterr == nil {
 			env.SetPluginState(id, model.PluginStateRunning)
 		} else {
@@ -301,18 +307,25 @@ func (env *Environment) GenerateWebappBundle(id string) (*model.Manifest, error)
 
 func (env *Environment) RemovePlugin(id string) {
 	if _, ok := env.registeredPlugins.Load(id); ok {
+		mlog.Info(fmt.Sprintln("Environment.RemovePlugin id", id))
+
 		env.registeredPlugins.Delete(id)
 	}
 }
 
 // Deactivates the plugin with the given id.
 func (env *Environment) Deactivate(id string) bool {
+	mlog.Info(fmt.Sprintln("Environment.Deactivate"))
+
 	p, ok := env.registeredPlugins.Load(id)
+	mlog.Info(fmt.Sprintln("Environment.Deactivate ok", ok))
+
 	if !ok {
 		return false
 	}
 
 	isActive := env.IsActive(id)
+	mlog.Info(fmt.Sprintln("Environment.Deactivate isActive", isActive))
 
 	env.SetPluginState(id, model.PluginStateNotRunning)
 
@@ -325,8 +338,12 @@ func (env *Environment) Deactivate(id string) bool {
 		if err := rp.supervisor.Hooks().OnDeactivate(); err != nil {
 			env.logger.Error("Plugin OnDeactivate() error", mlog.String("plugin_id", rp.BundleInfo.Manifest.Id), mlog.Err(err))
 		}
+		mlog.Info(fmt.Sprintln("Environment.Deactivate Shutdown"))
+
 		rp.supervisor.Shutdown()
 	}
+
+	mlog.Info(fmt.Sprintln("Environment.Deactivate returning true"))
 
 	return true
 }

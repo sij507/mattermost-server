@@ -4,6 +4,7 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -40,6 +41,8 @@ func (a *App) SetPluginsEnvironment(pluginsEnvironment *plugin.Environment) {
 }
 
 func (a *App) SyncPluginsActiveState() {
+	mlog.Info(fmt.Sprintln("App.SyncPluginsActiveState "))
+
 	a.Srv.PluginsLock.RLock()
 	pluginsEnvironment := a.Srv.PluginsEnvironment
 	a.Srv.PluginsLock.RUnlock()
@@ -93,6 +96,8 @@ func (a *App) SyncPluginsActiveState() {
 
 			// Activate plugin if enabled
 			if pluginEnabled {
+				mlog.Info(fmt.Sprintln("App.SyncPluginsActiveState Activate "))
+
 				updatedManifest, activated, err := pluginsEnvironment.Activate(pluginId)
 				if err != nil {
 					plugin.WrapLogger(a.Log).Error("Unable to activate plugin", mlog.Err(err))
@@ -100,6 +105,8 @@ func (a *App) SyncPluginsActiveState() {
 				}
 
 				if activated && updatedManifest.HasClient() {
+					mlog.Info(fmt.Sprintln("App.SyncPluginsActiveState PublishLocal "))
+
 					message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_PLUGIN_ENABLED, "", "", "", nil)
 					message.Add("manifest", updatedManifest.ClientManifest())
 					a.PublishLocal(message)
@@ -288,6 +295,8 @@ func (a *App) GetActivePluginManifests() ([]*model.Manifest, *model.AppError) {
 // EnablePlugin will set the config for an installed plugin to enabled, triggering asynchronous
 // activation if inactive anywhere in the cluster.
 func (a *App) EnablePlugin(id string) *model.AppError {
+	mlog.Info(fmt.Sprintln("App.EnablePlugin ", id))
+
 	pluginsEnvironment := a.GetPluginsEnvironment()
 	if pluginsEnvironment == nil {
 		return model.NewAppError("EnablePlugin", "app.plugin.disabled.app_error", nil, "", http.StatusNotImplemented)
@@ -316,6 +325,8 @@ func (a *App) EnablePlugin(id string) *model.AppError {
 	cfg.PluginSettings.PluginStates[id] = &model.PluginState{Enable: true}
 
 	// This call will cause SyncPluginsActiveState to be called and the plugin to be activated
+	mlog.Info(fmt.Sprintln("App.SaveConfig "))
+
 	if err := a.SaveConfig(cfg, true); err != nil {
 		if err.Id == "ent.cluster.save_config.error" {
 			return model.NewAppError("EnablePlugin", "app.plugin.cluster.save_config.app_error", nil, "", http.StatusInternalServerError)
