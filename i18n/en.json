@@ -3499,10 +3499,6 @@
     "translation": "Unable to remove plugin bundle from file store."
   },
   {
-    "id": "app.plugin.remove_webapp_bundle.app_error",
-    "translation": "Unable to remove plugin webapp bundle locally"
-  },
-  {
     "id": "app.plugin.store_bundle.app_error",
     "translation": "Unable to store the plugin to the configured file store."
   },

@@ -269,7 +269,11 @@ func (env *Environment) GenerateWebappBundle(id string) (*model.Manifest, error)
 		bundlePath = filepath.Join(env.pluginDir, id, bundlePath)
 		destinationPath := filepath.Join(env.webappPluginDir, id)
 
-		if err := utils.CopyDir(filepath.Dir(bundlePath), destinationPath, true); err != nil {
+		if err := os.RemoveAll(destinationPath); err != nil {
+			return nil, errors.Wrapf(err, "unable to remove old webapp bundle directory: %v", destinationPath)
+		}
+
+		if err := utils.CopyDir(filepath.Dir(bundlePath), destinationPath); err != nil {
 			return nil, errors.Wrapf(err, "unable to copy webapp bundle directory: %v", id)
 		}
 
@@ -293,34 +297,6 @@ func (env *Environment) GenerateWebappBundle(id string) (*model.Manifest, error)
 	}
 
 	return pluginInfo.Manifest, nil
-}
-
-func (env *Environment) CleanUpWebappBundle(id string) error {
-	plugins, err := env.Available()
-	if err != nil {
-		return err
-	}
-	var pluginInfo *model.BundleInfo
-	for _, p := range plugins {
-		if p.Manifest != nil && p.Manifest.Id == id {
-			if pluginInfo != nil {
-				return fmt.Errorf("multiple plugins found: %v", id)
-			}
-			pluginInfo = p
-		}
-	}
-	if pluginInfo == nil {
-		return fmt.Errorf("plugin not found: %v", id)
-	}
-
-	if pluginInfo.Manifest.HasWebapp() {
-		destinationPath := filepath.Join(env.webappPluginDir, id)
-		if err := os.RemoveAll(destinationPath); err != nil {
-			return errors.Wrapf(err, "unable to remove old webapp bundle directory: %v", destinationPath)
-		}
-	}
-
-	return nil
 }
 
 func (env *Environment) RemovePlugin(id string) {

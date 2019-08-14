@@ -21,7 +21,7 @@ func TestConfigFlag(t *testing.T) {
 
 	i18n, ok := fileutils.FindDir("i18n")
 	require.True(t, ok)
-	require.NoError(t, utils.CopyDir(i18n, filepath.Join(dir, "i18n"), false))
+	require.NoError(t, utils.CopyDir(i18n, filepath.Join(dir, "i18n")))
 
 	prevDir, err := os.Getwd()
 	require.NoError(t, err)
