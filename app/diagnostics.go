@@ -299,6 +299,7 @@ func (a *App) trackConfig() {
 		"experimental_ldap_group_sync":                            *cfg.ServiceSettings.ExperimentalLdapGroupSync,
 		"disable_bots_when_owner_is_deactivated":                  *cfg.ServiceSettings.DisableBotsWhenOwnerIsDeactivated,
 		"enable_bot_account_creation":                             *cfg.ServiceSettings.EnableBotAccountCreation,
+		"enable_svgs":                                             *cfg.ServiceSettings.EnableSVGs,
 	})
 
 	a.SendDiagnostic(TRACK_CONFIG_TEAM, map[string]interface{}{
@@ -597,6 +598,7 @@ func (a *App) trackConfig() {
 		"enable":                        *cfg.PluginSettings.Enable,
 		"enable_uploads":                *cfg.PluginSettings.EnableUploads,
 		"allow_insecure_download_url":   *cfg.PluginSettings.AllowInsecureDownloadUrl,
+		"enable_health_check":           *cfg.PluginSettings.EnableHealthCheck,
 	})
 
 	a.SendDiagnostic(TRACK_CONFIG_DATA_RETENTION, map[string]interface{}{
