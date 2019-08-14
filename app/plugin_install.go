@@ -74,9 +74,6 @@ func (a *App) installPlugin(pluginFile io.ReadSeeker, replace bool) (*model.Mani
 			Id: manifest.Id,
 		},
 	)
-	mlog.Info("Sleeping for 2s")
-	// time.Sleep(2 * time.Second)
-	mlog.Info("Done sleeping for 2s -- commented out")
 
 	// Enable plugin after all cluster peers are updated
 	if stashedStates[manifest.Id] != nil && stashedStates[manifest.Id].Enable {

@@ -68,6 +68,8 @@ func (a *App) SyncPluginsActiveState() {
 			if state, ok := config.PluginStates[pluginId]; ok {
 				pluginEnabled = state.Enable
 			}
+			mlog.Info(fmt.Sprintln("App.SyncPluginsActiveState Deactivate pluginId: ", pluginId))
+			mlog.Info(fmt.Sprintln("App.SyncPluginsActiveState Deactivate pluginEnabled: ", pluginEnabled))
 
 			// If it's not enabled we need to deactivate it
 			if !pluginEnabled {
@@ -93,6 +95,8 @@ func (a *App) SyncPluginsActiveState() {
 			if state, ok := config.PluginStates[pluginId]; ok {
 				pluginEnabled = state.Enable
 			}
+			mlog.Info(fmt.Sprintln("App.SyncPluginsActiveState Activate pluginId: ", pluginId))
+			mlog.Info(fmt.Sprintln("App.SyncPluginsActiveState Activate pluginEnabled: ", pluginEnabled))
 
 			// Activate plugin if enabled
 			if pluginEnabled {
