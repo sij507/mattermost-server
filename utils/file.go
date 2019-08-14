@@ -57,9 +57,9 @@ func CopyFile(src, dst string) (err error) {
 }
 
 // CopyDir will copy a directory and all contained files and directories.
-// src must exist and dst must not exist.
+// src must exist and dst must not exist, unless overwrite is true.
 // Permissions are preserved when possible. Symlinks are skipped.
-func CopyDir(src string, dst string) (err error) {
+func CopyDir(src string, dst string, overwrite bool) (err error) {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
@@ -75,7 +75,7 @@ func CopyDir(src string, dst string) (err error) {
 	if err != nil && !os.IsNotExist(err) {
 		return
 	}
-	if err == nil {
+	if err == nil && !overwrite {
 		return fmt.Errorf("destination already exists")
 	}
 
@@ -94,7 +94,7 @@ func CopyDir(src string, dst string) (err error) {
 		dstPath := filepath.Join(dst, item.Name())
 
 		if item.IsDir() {
-			err = CopyDir(srcPath, dstPath)
+			err = CopyDir(srcPath, dstPath, overwrite)
 			if err != nil {
 				return
 			}
