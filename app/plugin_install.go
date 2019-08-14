@@ -232,6 +232,7 @@ func (a *App) removePluginLocally(id string) *model.AppError {
 
 	pluginsEnvironment.Deactivate(id)
 	pluginsEnvironment.RemovePlugin(id)
+	a.UnregisterPluginCommands(id)
 
 	if err := os.RemoveAll(pluginPath); err != nil {
 		return model.NewAppError("removePlugin", "app.plugin.remove.app_error", nil, err.Error(), http.StatusInternalServerError)
