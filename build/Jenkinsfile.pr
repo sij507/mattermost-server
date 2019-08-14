@@ -71,25 +71,6 @@ pipeline {
             }
         }
 
-        stage('Check i18n') {
-            environment {
-                GOPATH = "/go"
-            }
-
-            steps {
-                withDockerContainer(args: '-u root --privileged -v ${WORKSPACE}/src:/go/src/', image: 'mattermost/mattermost-build-server:feb-28-2019') {
-                    ansiColor('xterm') {
-                        sh """
-                            cd /go/src/github.com/mattermost/mattermost-server
-                            cp i18n/en.json /tmp/en.json
-                            make i18n-extract
-                            diff /tmp/en.json i18n/en.json
-                        """
-                    }
-                }
-            }
-        }
-
         stage('Build') {
             environment {
                 GOPATH = "/go"
@@ -233,10 +214,6 @@ pipeline {
 
     post {
         always {
-            dir('src/github.com/mattermost/mattermost-server') {
-                junit allowEmptyResults: true, healthScaleFactor: 0.0, testResults: 'report*.xml'
-                archiveArtifacts 'report*.xml'
-            }
             dir('src/github.com/mattermost/mattermost-server/build') {
                 ansiColor('xterm') {
                     sh """
